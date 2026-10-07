@@ -1,4 +1,4 @@
-# Smart Snap
+# Veri Snap
 
 A Streamlit-based application for intelligent student attendance and enrollment management using face recognition and voice analysis.
 
@@ -15,7 +15,7 @@ A Streamlit-based application for intelligent student attendance and enrollment 
 ## Project Structure
 
 ```
-Smart Snap/
+Veri Snap/
 ├── app.py                      # Main Streamlit application entry point
 ├── requirements.txt            # Python dependencies
 ├── runtime.txt                 # Runtime configuration
