@@ -55,7 +55,7 @@ def student_dashboard():
 
         stats_map[sid]['total'] +=1
 
-        if log.get('id_present'):
+        if log.get('is_present'):
             stats_map[sid]['attended'] += 1
 
 
@@ -139,7 +139,7 @@ def student_screen():
                         st.session_state.is_logged_in = True
                         st.session_state.user_role = 'student'
                         st.session_state.student_data = student
-                        st.toast(f'Welcome Back {student['name']}')
+                        st.toast(f"Welcome Back {student['name']}")
                         time.sleep(1)
                         st.rerun()
                 else:

@@ -71,35 +71,75 @@ def train_classifier():
     model_data = get_trained_model()
     return bool(model_data)
 
+
+
+
 def predict_attendance(class_image_np):
     encodings = get_face_embeddings(class_image_np)
-
     detected_student = {}
 
+    if not encodings:
+        return detected_student, [], 0
 
-    model_data = get_trained_model()
+    all_students = get_all_students() or []
 
-    if not model_data:
-        return detected_student, [], len(encodings)
-    
-    clf = model_data['clf']
-    X_train = model_data['X']
-    y_train = model_data['y']
+    # Keep only students with valid 128-dimensional embeddings.
+    students_with_embeddings = []
 
-    all_students = sorted(list(set(y_train)))
+    for student in all_students:
+        embedding = student.get("face_embedding")
+
+        if embedding is None:
+            continue
+
+        try:
+            embedding = np.asarray(embedding, dtype=np.float64)
+        except (TypeError, ValueError):
+            continue
+
+        if embedding.shape != (128,) or not np.all(np.isfinite(embedding)):
+            continue
+
+        students_with_embeddings.append((student["student_id"], embedding))
+
+    all_ids = [student_id for student_id, _ in students_with_embeddings]
+
+    if not students_with_embeddings:
+        return detected_student, all_ids, len(encodings)
+
+    # Temporary conservative threshold; validate with test images.
+    resemblance_threshold = 0.40
 
     for encoding in encodings:
-        if len(all_students) >= 2:
-            predicted_id = int(clf.predict([encoding])[0])
+        encoding = np.asarray(encoding, dtype=np.float64)
+
+        if encoding.shape != (128,) or not np.all(np.isfinite(encoding)):
+            continue
+
+        distances = [
+            (
+                student_id,
+                float(np.linalg.norm(stored_embedding - encoding))
+            )
+            for student_id, stored_embedding in students_with_embeddings
+        ]
+
+        best_student_id, best_distance = min(
+            distances, key=lambda item: item[1]
+        )
+
+        print("Face matching results:")
+        for student_id, distance in distances:
+            print(f"  Student {student_id}: {distance:.4f}")
+
+        print(
+            f"Closest student: {best_student_id}, "
+            f"distance: {best_distance:.4f}"
+        )
+
+        if best_distance <= resemblance_threshold:
+            detected_student[best_student_id] = True
         else:
-            predicted_id = int(all_students[0])
+            print("Unknown face: registration should be offered.")
 
-        student_embedding = X_train[y_train.index(predicted_id)]
-
-        best_match_score = np.linalg.norm(student_embedding - encoding)
-
-        resemblance_threshold = 0.6
-
-        if best_match_score <= resemblance_threshold:
-            detected_student[predicted_id] = True
-    return detected_student, all_students, len(encodings)
+    return detected_student, all_ids, len(encodings)

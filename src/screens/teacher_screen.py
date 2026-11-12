@@ -153,7 +153,7 @@ def teacher_tab_take_attendance():
 
                             all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
 
-                enrolled_res = supabase.table('subjects_students').select("*, students(*)").eq('subject_id',selected_subject_id ).execute()
+                enrolled_res = supabase.table('subject_students').select("*, students(*)").eq('subject_id',selected_subject_id ).execute()
                 enrolled_students = enrolled_res.data
 
                 if not enrolled_students:
@@ -181,7 +181,7 @@ def teacher_tab_take_attendance():
                             'student_id': student['student_id'],
                             'subject_id': selected_subject_id,
                             'timestamp': current_timestamp,
-                            'id_present': bool(is_present)
+                            'is_present': bool(is_present)
                         })
 
                 attendance_result_dialog(pd.DataFrame(results), attendance_to_log)
@@ -262,7 +262,7 @@ def teacher_tab_attendance_records():
             "Time": datetime.fromisoformat(ts).strftime("%Y-%m-%d %I:%M %p") if ts else "N'A",
             "Subject": r['subjects']['name'],
             "Subject Code":r['subjects']['subject_code'],
-            "id_present": bool(r.get('id_present', False))
+            "is_present": bool(r.get('is_present', False))
         })
 
 
@@ -273,8 +273,8 @@ def teacher_tab_attendance_records():
     summary = (
         df.groupby(['ts_group', 'Time', 'Subject', 'Subject Code'])
         .agg(
-            Present_Count = ('id_present', 'sum'),
-            Total_Count =('id_present', 'count')
+            Present_Count = ('is_present', 'sum'),
+            Total_Count =('is_present', 'count')
         ).reset_index()
 
     )
