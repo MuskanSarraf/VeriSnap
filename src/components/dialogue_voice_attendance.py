@@ -43,7 +43,7 @@ def voice_attendance_dialog(selected_subject_id):
 
             enrolled_res = (
                 supabase
-                .table("subjects_students")
+                .table("subject_students")
                 .select("*, students(*)")
                 .eq("subject_id", selected_subject_id)
                 .execute()
@@ -102,22 +102,18 @@ def voice_attendance_dialog(selected_subject_id):
                 is_present = score > 0
 
                 results.append({
-                    "Name": student["name"],
-                    "ID": student["student_id"],
-                    "Source": round(score, 4) if is_present else "-",
-                    "Status": (
-                        "✅ Present"
-                        if is_present
-                        else "❌ Absent"
-                    )
-                })
+                "Name": student["name"],
+                "ID": student["student_id"],
+                "Source": str(round(score, 4)) if is_present else "Absent",
+                "Status": "✅ Present" if is_present else "❌ Absent"
+                 })
 
                 # Using your database column name
                 attendance_to_log.append({
                     "student_id": student["student_id"],
                     "subject_id": selected_subject_id,
                     "timestamp": current_timestamp,
-                    "id_present": bool(is_present)
+                    "is_present": bool(is_present)
                 })
 
             st.session_state.voice_attendance_results = (
