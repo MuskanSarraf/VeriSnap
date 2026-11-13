@@ -1,9 +1,11 @@
 import streamlit as st
+from html import escape
+
 def subject_card(name, code, section, stats=None, footer_callback=None):
     html = f"""
-        <div style="background:white; border-left: 8px solid #EB459E; padding:25px; border-radius: 20px; border: 1px solid black; margin-bottom:20px;">
-        <h3 style="margin:0; color: #1e293b; font-size: 1.5rem ">{name}</h3>
-        <p style="color:#64748b; margin:10px 0;">Code : <span style="background:#E0E3FF; color:#5865F2; padding:2px 8px; border-radius:5px;">{code} </span> | Section : {section}</p>
+        <section style="background:#fff; padding:1.25rem; border-radius:12px; border:1px solid #d9e0dc; margin-bottom:1rem;">
+        <h3 style="margin:0; color:#202c29; font-size:1.2rem">{escape(str(name))}</h3>
+        <p style="color:#52635d; margin:.65rem 0 1rem;">Code: <strong>{escape(str(code))}</strong> <span aria-hidden="true">·</span> Section: {escape(str(section))}</p>
         
         """
     
@@ -11,10 +13,12 @@ def subject_card(name, code, section, stats=None, footer_callback=None):
         html+= """
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
         """
-        for icon, label, value in stats:
-            html+= f'<div style="background: #EB459E10; padding:5px 12px; border-radius:12px; font-size:0.9rem">{icon} <b>{value}</b> {label} </div>'
+        for _icon, label, value in stats:
+            html+= f'<div style="background:#f1f5f3; color:#344640; padding:6px 10px; border-radius:7px; font-size:.9rem">{escape(str(label))}: <b>{escape(str(value))}</b></div>'
         
         html+= "</div>"
+
+    html += "</section>"
 
     st.markdown(html, unsafe_allow_html=True)
 

@@ -94,7 +94,8 @@ def teacher_dashboard():
 
 def teacher_tab_take_attendance():
     teacher_id = st.session_state.teacher_data['teacher_id']
-    st.header('Take AI Attendance')
+    st.header('Take attendance')
+    st.caption('Choose a subject, add classroom photos or use voice attendance, then review the results before saving.')
 
     if 'attendance_images' not in st.session_state:
         st.session_state.attendance_images = []
@@ -102,7 +103,10 @@ def teacher_tab_take_attendance():
     subjects = get_teacher_subjects(teacher_id)
 
     if not subjects:
-        st.warning('You havent created any subjects yet! Please create one to begin!')
+        st.info('Create a subject before taking attendance. Add its name, code, and section in Manage Subjects.')
+        if st.button('Go to Manage Subjects', type='primary', icon=':material/book_ribbon:'):
+            st.session_state.current_teacher_tab = 'manage_subjects'
+            st.rerun()
         return
 
     subject_options = {
@@ -142,7 +146,7 @@ def teacher_tab_take_attendance():
                     width='stretch',
                     caption=f'Photo {idx + 1}'
                 )
-
+    st.write("Saved photos:", len(st.session_state.attendance_images))
     has_photos = bool(st.session_state.attendance_images)
 
     c1, c2, c3 = st.columns(3)
@@ -166,7 +170,7 @@ def teacher_tab_take_attendance():
             icon=':material/analytics:',
             disabled=not has_photos
         ):
-            with st.spinner('Deep scanning classroom photos...'):
+            with st.spinner('Analyzing classroom photos…'):
                 all_detected_ids = {}
 
                 for idx, img in enumerate(st.session_state.attendance_images):
@@ -192,7 +196,7 @@ def teacher_tab_take_attendance():
                 enrolled_students = enrolled_res.data
 
                 if not enrolled_students:
-                    st.warning('No students enrolled in this course')
+                    st.warning('No students are enrolled in this subject, so there is nobody to mark present. Share the subject code or QR code first.')
 
                 else:
                     results, attendance_to_log = [], []
@@ -288,7 +292,7 @@ def teacher_tab_manage_subjects():
                 footer_callback=share_btn
             )
     else:
-        st.info("NO SUBJECTS FOUND. CREATE ONE ABOVE")
+        st.info('No subjects yet. Create your first subject to share an enrollment code and start taking attendance.')
 
 
 def teacher_tab_attendance_records():
@@ -299,6 +303,7 @@ def teacher_tab_attendance_records():
     records = get_attendance_for_teacher(teacher_id)
 
     if not records:
+        st.info('No attendance sessions have been saved yet. Take attendance from the Take Attendance tab; saved sessions will appear here.')
         return
     
     data = []
