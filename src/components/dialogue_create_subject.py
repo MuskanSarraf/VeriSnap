@@ -17,7 +17,7 @@ def create_subject_dialog(teacher_id):
                 create_subject(sub_id, sub_name, sub_section, teacher_id)
                 st.toast("Subject Created Succesfully!")
                 st.rerun()
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+            except Exception:
+                st.error('Could not create this subject. Check that the code is unique and try again.')
         else:
             st.warning("Please fill all the fields")

@@ -14,6 +14,20 @@ import time
 from src.components.dialogue_enroll import enroll_dialog
 from src.components.subject_card import subject_card
 
+
+@st.dialog("Unenroll from subject")
+def confirm_unenroll(student_id, subject_id, subject_name):
+    st.write(f'You will leave **{subject_name}**. You can rejoin later with the subject code from your teacher.')
+    cancel_col, confirm_col = st.columns(2)
+    with cancel_col:
+        if st.button('Keep subject', width='stretch'):
+            st.rerun()
+    with confirm_col:
+        if st.button('Unenroll', type='primary', width='stretch'):
+            unenroll_student_to_subject(student_id, subject_id)
+            st.toast(f'Unenrolled from {subject_name}.')
+            st.rerun()
+
 def student_dashboard():
     student_data = st.session_state.student_data
     student_id = student_data['student_id']
@@ -68,15 +82,13 @@ def student_dashboard():
         stats = stats_map.get(sid,{"total":0, "attended": 0} )
         def unenroll_button():
          if st.button(
-         "Unenroll from this course",
+         "Unenroll",
           type='tertiary',
           width='stretch',
           icon=':material/delete_forever:',
           key=f"unenroll_{sid}"
     ):
-                    unenroll_student_to_subject(student_id, sid)
-                    st.toast(f'Unenrolled from {sub["name"]} successfully!')
-                    st.rerun()
+                    confirm_unenroll(student_id, sid, sub['name'])
 
         with cols[i % 2]:
 
@@ -90,6 +102,8 @@ def student_dashboard():
                 ],
                 footer_callback=unenroll_button
             )
+    if not subjects:
+        st.info('You are not enrolled in any subjects yet. Enter the code from your teacher to join a class.')
     footer_dashboard()
 
 
@@ -112,7 +126,9 @@ def student_screen():
             st.session_state['login_type'] = None
             st.rerun()
 
-    st.header('Login using FaceID', text_alignment='center')
+    st.header('Sign in with your face', text_alignment='center')
+    st.caption('Allow camera access, center your face in the frame, and capture a clear image in good light.')
+    st.caption('Camera access is required here. If capture is unavailable, allow camera use for this site in your browser settings and reload.')
     st.space()
     st.space()
     
@@ -126,9 +142,9 @@ def student_screen():
             detected, all_ids, num_faces = predict_attendance(img)
 
             if num_faces == 0:
-                st.warning('Face not found!')
+                st.warning('No face detected. Move into the frame, improve the lighting, and try again.')
             elif num_faces >1:
-                st.warning('Multiple faces found')
+                st.warning('More than one face detected. Make sure only you are in the frame, then capture again.')
             else:
                 if detected:
                     student_id = list(detected.keys())[0]
@@ -143,7 +159,7 @@ def student_screen():
                         time.sleep(1)
                         st.rerun()
                 else:
-                    st.info('Face not recognized! You might be a new student!')
+                    st.info('We couldn’t match this face to a profile. Capture again, or create a student profile below.')
                     show_registration = True
     if show_registration:
         with st.container(border=True):
@@ -151,7 +167,7 @@ def student_screen():
             new_name = st.text_input("Enter your name", placeholder='E.g. Hamza Rizvi')
 
             st.subheader('Optional : Voice Enrollment')
-            st.info("Enroll your for voice only attendance")
+            st.info("Optional: add a voice sample so your teacher can use voice attendance.")
 
 
             audio_data = None
@@ -159,7 +175,7 @@ def student_screen():
             try:
                 audio_data = st.audio_input('Record a short phrase like I am present, My name is Akash.')
             except Exception:
-                st.error('Audio Data failed!')
+                st.error('The microphone could not be opened. You can still create your profile without voice enrollment.')
 
             if st.button('Create Account', type='primary'):
                 if new_name:
@@ -183,6 +199,8 @@ def student_screen():
                                 st.toast(f'Profile Created! Hi {new_name}!')
                                 time.sleep(1)
                                 st.rerun()
+                            else:
+                                st.error('Your profile could not be created. Please try again in a moment.')
                         else:
                             st.error('Couldnt capture your facial features for registration')
 
